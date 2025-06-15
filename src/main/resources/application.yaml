@@ -1,0 +1,23 @@
+# Database Configuration (PostgreSQL)
+spring:
+  application:
+    name: Advanced To-Do
+  datasource:
+    url: jdbc:postgresql://db:5432/todolist_db
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update # 'create', 'create-drop', 'update', 'validate', 'none'
+    show-sql: true
+
+# Server Port
+server:
+  port: 5555
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
