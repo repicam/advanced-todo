@@ -64,21 +64,6 @@ services:
       timeout: 3s
       retries: 5
 
-  app:
-    build: .
-    ports:
-      - "5000:5555"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/todolist_db
-      SPRING_DATASOURCE_USERNAME: repicam
-      SPRING_DATASOURCE_PASSWORD: ItsV€ry1Diff
-      JWT_SECRET: Q2VwQ2h6b3J6b2d2b2d6b3J6b3J6b3J6b3J6b3J6b3J6b3I=
-      JWT_EXPIRATION: 86400000
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: on-failure
-
   app-api:
     build: ./todo-api
     ports:

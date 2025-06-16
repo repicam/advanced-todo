@@ -2,7 +2,7 @@ FROM openjdk:21-jdk-slim
 
 WORKDIR /app
 
-COPY target/todo-api-2.0.0.jar api.jar
+COPY target/*.jar api.jar
 
 # Puerto de la aplicación Spring Boot
 EXPOSE 5555
