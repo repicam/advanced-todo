@@ -7,6 +7,7 @@ import es.myprojects.todo.models.User;
 import es.myprojects.todo.repositories.TaskRepository;
 import es.myprojects.todo.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,9 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final KafkaTemplate<String, TaskDto> kafkaTemplate;
+
+    private static final String TASK_TOPIC = "task-events";
 
     public TaskDto createTask(TaskDto taskDto, String username) {
         User user = userRepository.findByUsername(username)
@@ -29,9 +33,11 @@ public class TaskService {
                 .completed(false)
                 .user(user)
                 .build();
-
         Task savedTask = taskRepository.save(task);
-        return convertToDto(savedTask);
+
+        TaskDto createdTaskDto = convertToDto(savedTask);
+        kafkaTemplate.send(TASK_TOPIC, "created", createdTaskDto);
+        return createdTaskDto;
     }
 
     public List<TaskDto> getTasksByUserId(String username) {
@@ -69,7 +75,12 @@ public class TaskService {
         task.setDescription(taskDto.getDescription());
         task.setCompleted(taskDto.isCompleted());
         Task updatedTask = taskRepository.save(task);
-        return convertToDto(updatedTask);
+
+        TaskDto createdTaskDto = convertToDto(updatedTask);
+        if (updatedTask.isCompleted())
+            kafkaTemplate.send(TASK_TOPIC, "completed", createdTaskDto);
+
+        return createdTaskDto;
     }
 
     public void deleteTask(Long id, String username) {
@@ -83,6 +94,8 @@ public class TaskService {
             throw new SecurityException("User not authorized to delete this task");
         }
         taskRepository.delete(task);
+
+        kafkaTemplate.send(TASK_TOPIC, "deleted", TaskDto.builder().id(id).build());
     }
 
     private TaskDto convertToDto(Task task) {
