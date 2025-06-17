@@ -30,7 +30,6 @@ public class TaskService {
         Task task = Task.builder()
                 .title(taskDto.getTitle())
                 .description(taskDto.getDescription())
-                .completed(false)
                 .user(user)
                 .build();
         Task savedTask = taskRepository.save(task);
@@ -48,28 +47,12 @@ public class TaskService {
     }
 
     public TaskDto getTaskById(Long id, String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
-
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
-
-        if (!task.getUser().getId().equals(user.getId())) {
-            throw new SecurityException("User not authorized to access this task");
-        }
+        Task task = findTaskByIdAndUsername(id, username);
         return convertToDto(task);
     }
 
     public TaskDto updateTask(Long id, TaskDto taskDto, String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
-
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
-
-        if (!task.getUser().getId().equals(user.getId())) {
-            throw new SecurityException("User not authorized to update this task");
-        }
+        Task task = findTaskByIdAndUsername(id, username);
 
         task.setTitle(taskDto.getTitle());
         task.setDescription(taskDto.getDescription());
@@ -84,18 +67,24 @@ public class TaskService {
     }
 
     public void deleteTask(Long id, String username) {
+        Task task = findTaskByIdAndUsername(id, username);
+        User user = task.getUser();
+        taskRepository.delete(task);
+
+        kafkaTemplate.send(TASK_TOPIC, "deleted", TaskDto.builder().id(id).userEmail(user.getEmail()).build());
+    }
+
+    private Task findTaskByIdAndUsername(Long id, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
 
-        if (!task.getUser().getId().equals(user.getId())) {
+        if (!task.getUser().getId().equals(user.getId()))
             throw new SecurityException("User not authorized to delete this task");
-        }
-        taskRepository.delete(task);
 
-        kafkaTemplate.send(TASK_TOPIC, "deleted", TaskDto.builder().id(id).build());
+        return task;
     }
 
     private TaskDto convertToDto(Task task) {
@@ -104,6 +93,7 @@ public class TaskService {
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .completed(task.isCompleted())
+                .userEmail(task.getUser().getEmail())
                 .build();
     }
 }

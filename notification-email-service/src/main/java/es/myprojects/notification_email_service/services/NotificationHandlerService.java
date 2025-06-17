@@ -19,6 +19,7 @@ import java.util.Random;
 public class NotificationHandlerService {
 
     private final NotificationRepository notificationRepository;
+    private final EmailService emailService;
     private final Random random = new Random(); // Para simular fallos
 
     // Aplicamos el Circuit Breaker "externalService" a este método
@@ -42,10 +43,26 @@ public class NotificationHandlerService {
                 .taskId(taskEvent.getId())
                 .message(String.format("Task %sed. (ID: %d)", eventType, taskEvent.getId()))
                 .timestamp(LocalDateTime.now())
+                .userEmail(taskEvent.getUserEmail())
                 .build();
 
         notificationRepository.save(notification);
         log.info("Notification saved successfully for task ID: {}", taskEvent.getId());
+
+        if (eventType == "created") {
+            String subject = String.format("Task completed!");
+            String htmlContent = String.format("<p>Hello,</p>" +
+                            "<p>Your task <strong>'%s'</strong> has been completed.</p>" +
+                            "<p>Details: %s</p>" +
+                            "<p>Regards,<br>Your ToDo App Team</p>",
+                    taskEvent.getTitle(), taskEvent.getDescription());
+            boolean emailSent = emailService.sendEmail(taskEvent.getUserEmail(), subject, htmlContent);
+            if (emailSent) {
+                log.info("Email notification sent to {} for task ID: {}", taskEvent.getUserEmail(), taskEvent.getId());
+            } else {
+                log.error("Failed to send email notification to {} for task ID: {}", taskEvent.getUserEmail(), taskEvent.getId());
+            }
+        }
     }
 
     // Método de fallback para el Circuit Breaker

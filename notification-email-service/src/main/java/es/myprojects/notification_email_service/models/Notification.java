@@ -23,4 +23,5 @@ public class Notification {
     private LocalDateTime timestamp;
     private String taskTitle;
     private Long taskId;
+    private String userEmail;
 }

@@ -17,4 +17,5 @@ public class TaskDto {
     private String title;
     private String description;
     private boolean completed;
+    private String userEmail;
 }

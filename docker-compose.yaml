@@ -69,11 +69,9 @@ services:
     ports:
       - "5000:5555"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/todolist_db
       SPRING_DATASOURCE_USERNAME: repicam
       SPRING_DATASOURCE_PASSWORD: ItsV€ry1Diff
       JWT_SECRET: Q2VwQ2h6b3J6b2d2b2d6b3J6b3J6b3J6b3J6b3J6b3J6b3I=
-      JWT_EXPIRATION: 86400000
       SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       db:
@@ -91,6 +89,7 @@ services:
       SPRING_KAFKA_CONSUMER_GROUP_ID: notification-group
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      RESEND_API_KEY: your_resend_api_key_here
     depends_on:
       kafka:
         condition: service_healthy

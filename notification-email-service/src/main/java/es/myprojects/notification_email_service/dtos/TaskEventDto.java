@@ -1,5 +1,6 @@
 package es.myprojects.notification_email_service.dtos;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,4 +16,6 @@ public class TaskEventDto {
     private String title;
     private String description;
     private boolean completed;
+    @NotBlank
+    private String userEmail;
 }

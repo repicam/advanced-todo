@@ -13,7 +13,7 @@ spring:
     show-sql: true
   kafka:
     producer:
-      bootstrap-servers: kafka:9092
+      bootstrap-servers: ${SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     properties:

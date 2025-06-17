@@ -3,13 +3,13 @@ spring:
     name: Notification email service
   kafka:
     consumer:
-      bootstrap-servers: kafka:9092
-      group-id: notification-group
+      bootstrap-servers: ${SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS}
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID}
       auto-offset-reset: earliest
   data:
     redis:
-      host: redis
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
       database: 0
 
 server:
@@ -23,3 +23,6 @@ management:
   health:
     circuitbreakers:
       enabled: true
+
+resend:
+  api-key: ${RESEND_API_KEY}
