@@ -2,14 +2,14 @@ package es.myprojects.todo.dtos;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class TaskDto {
 
     private Long id;
@@ -17,5 +17,4 @@ public class TaskDto {
     private String title;
     private String description;
     private boolean completed;
-    private String userEmail;
 }

@@ -23,7 +23,7 @@ public class EmailService {
         try {
             CreateEmailOptions request = CreateEmailOptions.builder()
                     .from("onboarding@resend.dev") // <-- IMPORTANTE: Usa tu dominio verificado o "onboarding@resend.dev" para pruebas
-                    .to(to)
+                    .to("irepisocamara@gmail.com") //.to(to)
                     .subject(subject)
                     .html(htmlContent)
                     .build();

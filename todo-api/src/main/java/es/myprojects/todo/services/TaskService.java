@@ -1,6 +1,7 @@
 package es.myprojects.todo.services;
 
 import es.myprojects.todo.dtos.TaskDto;
+import es.myprojects.todo.dtos.TaskKafkaDto;
 import es.myprojects.todo.exceptions.ResourceNotFoundException;
 import es.myprojects.todo.models.Task;
 import es.myprojects.todo.models.User;
@@ -19,7 +20,7 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
-    private final KafkaTemplate<String, TaskDto> kafkaTemplate;
+    private final KafkaTemplate<String, TaskKafkaDto> kafkaTemplate;
 
     private static final String TASK_TOPIC = "task-events";
 
@@ -35,7 +36,7 @@ public class TaskService {
         Task savedTask = taskRepository.save(task);
 
         TaskDto createdTaskDto = convertToDto(savedTask);
-        kafkaTemplate.send(TASK_TOPIC, "created", createdTaskDto);
+        kafkaTemplate.send(TASK_TOPIC, "created", TaskKafkaDto.fromTaskDto(createdTaskDto, user.getEmail()));
         return createdTaskDto;
     }
 
@@ -61,17 +62,17 @@ public class TaskService {
 
         TaskDto createdTaskDto = convertToDto(updatedTask);
         if (updatedTask.isCompleted())
-            kafkaTemplate.send(TASK_TOPIC, "completed", createdTaskDto);
+            kafkaTemplate.send(TASK_TOPIC, "completed", TaskKafkaDto.fromTaskDto(createdTaskDto, task.getUser().getEmail()));
 
         return createdTaskDto;
     }
 
     public void deleteTask(Long id, String username) {
         Task task = findTaskByIdAndUsername(id, username);
-        User user = task.getUser();
+        String userEmail = task.getUser().getEmail();
         taskRepository.delete(task);
 
-        kafkaTemplate.send(TASK_TOPIC, "deleted", TaskDto.builder().id(id).userEmail(user.getEmail()).build());
+        kafkaTemplate.send(TASK_TOPIC, "deleted", TaskKafkaDto.builder().id(id).userEmail(userEmail).build());
     }
 
     private Task findTaskByIdAndUsername(Long id, String username) {
@@ -93,7 +94,6 @@ public class TaskService {
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .completed(task.isCompleted())
-                .userEmail(task.getUser().getEmail())
                 .build();
     }
 }

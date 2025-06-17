@@ -49,8 +49,8 @@ public class NotificationHandlerService {
         notificationRepository.save(notification);
         log.info("Notification saved successfully for task ID: {}", taskEvent.getId());
 
-        if (eventType == "created") {
-            String subject = String.format("Task completed!");
+        if (eventType.equals("completed")) {
+            String subject = "Task completed!";
             String htmlContent = String.format("<p>Hello,</p>" +
                             "<p>Your task <strong>'%s'</strong> has been completed.</p>" +
                             "<p>Details: %s</p>" +
