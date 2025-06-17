@@ -41,7 +41,7 @@ public class NotificationHandlerService {
                 .type(eventType)
                 .taskTitle(taskEvent.getTitle())
                 .taskId(taskEvent.getId())
-                .message(String.format("Task %sed. (ID: %d)", eventType, taskEvent.getId()))
+                .message(String.format("Task %s. (ID: %d)", eventType, taskEvent.getId()))
                 .timestamp(LocalDateTime.now())
                 .userEmail(taskEvent.getUserEmail())
                 .build();

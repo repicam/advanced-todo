@@ -14,7 +14,6 @@ public class EmailService {
 
     private final Resend resend;
 
-    // Inyecta tu clave API de Resend desde application.yml/variables de entorno
     public EmailService(@Value("${resend.api-key}") String resendApiKey) {
         this.resend = new Resend(resendApiKey);
     }
@@ -22,8 +21,8 @@ public class EmailService {
     public boolean sendEmail(String to, String subject, String htmlContent) {
         try {
             CreateEmailOptions request = CreateEmailOptions.builder()
-                    .from("onboarding@resend.dev") // <-- IMPORTANTE: Usa tu dominio verificado o "onboarding@resend.dev" para pruebas
-                    .to("irepisocamara@gmail.com") //.to(to)
+                    .from("onboarding@resend.dev")
+                    .to(to)
                     .subject(subject)
                     .html(htmlContent)
                     .build();
