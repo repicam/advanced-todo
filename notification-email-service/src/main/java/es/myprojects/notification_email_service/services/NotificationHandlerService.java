@@ -1,17 +1,14 @@
 package es.myprojects.notification_email_service.services;
 
 import es.myprojects.notification_email_service.dtos.TaskEventDto;
-import es.myprojects.notification_email_service.exceptions.ExternalServiceException;
 import es.myprojects.notification_email_service.models.Notification;
 import es.myprojects.notification_email_service.repositories.NotificationRepository;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -20,34 +17,27 @@ public class NotificationHandlerService {
 
     private final NotificationRepository notificationRepository;
     private final EmailService emailService;
-    private final Random random = new Random(); // Para simular fallos
 
-    // Aplicamos el Circuit Breaker "externalService" a este método
-    @CircuitBreaker(name = "externalService", fallbackMethod = "fallbackNotificationHandler")
     public void handleTaskNotification(String eventType, TaskEventDto taskEvent) {
         log.info("Processing task event: Type={}, TaskId={}, Title={}",
                 eventType, taskEvent.getId(), Objects.requireNonNullElse(taskEvent.getTitle(), ""));
 
-        // --- Simulación de fallo de un servicio externo ---
-        // Esto provocará que el Circuit Breaker se abra si falla con demasiada frecuencia
-        if (random.nextInt(10) < 3) { // 30% de probabilidad de fallo
-            log.error("Simulating external service failure for task ID: {}", taskEvent.getId());
-            throw new ExternalServiceException("Failed to send notification to external service.");
+        try {
+            Notification notification = Notification.builder()
+                    .id("notification-" + System.currentTimeMillis())
+                    .type(eventType)
+                    .taskTitle(taskEvent.getTitle())
+                    .taskId(taskEvent.getId())
+                    .message(String.format("Task %s. (ID: %d)", eventType, taskEvent.getId()))
+                    .timestamp(LocalDateTime.now())
+                    .userEmail(taskEvent.getUserEmail())
+                    .build();
+
+            notificationRepository.save(notification);
+            log.info("Notification saved successfully for task ID: {}", taskEvent.getId());
+        } catch (Exception e) {
+            errorHandler(eventType, taskEvent, "Failed to save notification: " + e.getMessage());
         }
-        // --- Fin de simulación ---
-
-        Notification notification = Notification.builder()
-                .id("notification-" + System.currentTimeMillis())
-                .type(eventType)
-                .taskTitle(taskEvent.getTitle())
-                .taskId(taskEvent.getId())
-                .message(String.format("Task %s. (ID: %d)", eventType, taskEvent.getId()))
-                .timestamp(LocalDateTime.now())
-                .userEmail(taskEvent.getUserEmail())
-                .build();
-
-        notificationRepository.save(notification);
-        log.info("Notification saved successfully for task ID: {}", taskEvent.getId());
 
         if (eventType.equals("completed")) {
             String subject = "Task completed!";
@@ -60,32 +50,16 @@ public class NotificationHandlerService {
             if (emailSent) {
                 log.info("Email notification sent to {} for task ID: {}", taskEvent.getUserEmail(), taskEvent.getId());
             } else {
-                log.error("Failed to send email notification to {} for task ID: {}", taskEvent.getUserEmail(), taskEvent.getId());
+                errorHandler(eventType, taskEvent, "Failed to send email notification");
             }
         }
     }
 
-    // Método de fallback para el Circuit Breaker
-    private void fallbackNotificationHandler(String eventType, TaskEventDto taskEvent, Throwable throwable) {
-        log.warn("Fallback triggered for task event: Type={}, TaskId={}, Title={}. Reason: {}",
-                eventType, taskEvent.getId(), Objects.requireNonNullElse(taskEvent.getTitle(), ""), throwable.getMessage());
+    private void errorHandler(String eventType, TaskEventDto taskEvent, String errorMsg) {
+        log.warn("An error occurred on task event: Type={}, TaskId={}. Error: {}",
+                eventType, taskEvent.getId(), errorMsg);
 
-        // Aquí puedes implementar una lógica de fallback:
-        // - Guardar el evento en una cola de reintento (Dead Letter Queue - DLQ)
-        // - Enviar una alerta a un sistema de monitorización
-        // - Registrar el fallo y omitir la notificación por ahora
-        // Para este ejemplo, simplemente registramos que se usó el fallback.
-
-        Notification fallbackNotification = Notification.builder()
-                .id("fallback-" + System.currentTimeMillis())
-                .type("fallback-" + eventType)
-                .taskTitle(taskEvent.getTitle())
-                .taskId(taskEvent.getId())
-                .message(String.format("Fallback: Could not process task '%s' (%s) due to external service failure. Error: %s",
-                        taskEvent.getId(), eventType, throwable.getMessage()))
-                .timestamp(LocalDateTime.now())
-                .build();
-        notificationRepository.save(fallbackNotification);
-        log.info("Fallback notification saved for task ID: {}", taskEvent.getId());
+        //TODO - Guardar la notificación en una tabla de errores
+        log.info("Error caught and saved");
     }
 }
