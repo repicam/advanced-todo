@@ -12,4 +12,9 @@ public class RegisterRequest extends LoginRequest{
     @Email(message = "Email should be valid")
     @NotBlank
     private String email;
+
+    public RegisterRequest(String username, String password, String email) {
+        super(username, password);
+        this.email = email;
+    }
 }

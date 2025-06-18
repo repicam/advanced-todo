@@ -5,8 +5,6 @@ import lombok.experimental.SuperBuilder;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-@AllArgsConstructor
 @ToString(callSuper = true)
 @SuperBuilder
 public class TaskKafkaDto extends TaskDto {
