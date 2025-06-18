@@ -22,7 +22,6 @@ send a notification to the user via email.
 - Email notification when a task is completed
 - Improved error handling and logging
 - Save notifications in redis database
-- 
 
 ### Technologies Used
 - Spring Boot with JPA
@@ -57,6 +56,7 @@ ensuring a consistent environment across development and production.
 Docker Compose will automatically set up the PostgreSQL database and the
 Spring Boot application. You only need to change the `docker-compose.yaml`
 file to configure the database connection settings and jwt secret key:
+
     - POSTGRES_USER
     - POSTGRES_PASSWORD
     - SPRING_DATASOURCE_USERNAME (should match POSTGRES_USER)
@@ -67,6 +67,7 @@ In v2 version, we configure kafka and zookeeper, but you can use the default
 settings to run localhost. Resend needs an API key, which you can get from 
 official website and set in the `docker-compose.yaml` file changing the following
 environment variables:
+
     - RESEND_API_KEY
     
 ##### Note
