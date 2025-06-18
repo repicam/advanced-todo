@@ -1,7 +1,9 @@
 package es.myprojects.notification_email_service.services;
 
 import es.myprojects.notification_email_service.dtos.TaskEventDto;
+import es.myprojects.notification_email_service.models.Error;
 import es.myprojects.notification_email_service.models.Notification;
+import es.myprojects.notification_email_service.repositories.ErrorRepository;
 import es.myprojects.notification_email_service.repositories.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import java.util.Objects;
 public class NotificationHandlerService {
 
     private final NotificationRepository notificationRepository;
+    private final ErrorRepository errorRepository;
     private final EmailService emailService;
 
     public void handleTaskNotification(String eventType, TaskEventDto taskEvent) {
@@ -59,7 +62,14 @@ public class NotificationHandlerService {
         log.warn("An error occurred on task event: Type={}, TaskId={}. Error: {}",
                 eventType, taskEvent.getId(), errorMsg);
 
-        //TODO - Guardar la notificación en una tabla de errores
+        Error errorModel = Error.builder()
+                .id("error-" + System.currentTimeMillis())
+                .taskId(taskEvent.getId())
+                .timestamp(LocalDateTime.now())
+                .errorMessage(errorMsg)
+                .build();
+
+        errorRepository.save(errorModel);
         log.info("Error caught and saved");
     }
 }
