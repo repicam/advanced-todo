@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: Advanced To-Do
+  datasource:
+    url: jdbc:postgresql://db:5432/todolist_db
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update # 'create', 'create-drop', 'update', 'validate', 'none'
+    show-sql: true
+  kafka:
+    producer:
+      bootstrap-servers: ${SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    properties:
+      spring.json.add.type.headers: false
+      spring.json.add.value.type.header: false
+      spring.json.add.array.type.headers: false
+      spring.json.trusted.packages: 'es.myprojects.todo.dtos'
+
+server:
+  port: 5555
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
